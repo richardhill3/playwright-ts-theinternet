@@ -23,7 +23,7 @@ test.describe("landing page", () => {
     let navigationAttempted = false;
     await page.route("https://github.com/**", (route) => {
       navigationAttempted = true;
-      route.abort();
+      void route.abort();
     });
 
     await page.getByRole("img", { name: "Fork me on GitHub" }).click();
