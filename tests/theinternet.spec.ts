@@ -145,7 +145,7 @@ test.describe("basic auth page", () => {
 
     const page = await context.newPage();
 
-    const response = await page.goto("https://the-internet.herokuapp.com/basic_auth");
+    const response = await page.goto("/basic_auth");
 
     expect(response?.status()).toBe(401);
 
@@ -162,7 +162,7 @@ test.describe("basic auth page", () => {
 
     const page = await context.newPage();
 
-    const response = await page.goto("https://the-internet.herokuapp.com/basic_auth");
+    const response = await page.goto("/basic_auth");
 
     expect(response?.status()).toBe(401);
 
@@ -291,4 +291,76 @@ test.describe("challenging DOM page", () => {
   });
 });
 
+test.describe("checkboxes", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/checkboxes");
+  });
 
+  test("has title", async ({ page }) => {
+    await expect(page).toHaveTitle(/The Internet/);
+  });
+
+  test("has heading", async ({ page }) => {
+    await expect(page.getByRole("heading", { name: "Checkboxes" })).toHaveText("Checkboxes");
+  });
+
+  test("checkbox default state", async ({ page }) => {
+    const checkbox_1 = page.getByRole("checkbox").nth(0);
+    const checkbox_2 = page.getByRole("checkbox").nth(1);
+
+    await expect(checkbox_1).toBeVisible();
+    await expect(checkbox_2).toBeVisible();
+
+    await expect(checkbox_1).not.toBeChecked();
+    await expect(checkbox_2).toBeChecked();
+  });
+
+  test("page refresh returns checkbox default state", async ({ page }) => {
+    const checkbox_1 = page.getByRole("checkbox").nth(0);
+    const checkbox_2 = page.getByRole("checkbox").nth(1);
+
+    await expect(checkbox_1).toBeVisible();
+    await expect(checkbox_2).toBeVisible();
+
+    // Switch checkbox states
+    await checkbox_1.check();
+    await checkbox_2.uncheck();
+
+    await expect(checkbox_1).toBeChecked();
+    await expect(checkbox_2).not.toBeChecked();
+
+    // Reload page to verify default states have been reverted
+    await page.reload();
+    await expect(checkbox_1).toBeVisible();
+    await expect(checkbox_2).toBeVisible();
+
+    await expect(checkbox_1).not.toBeChecked();
+    await expect(checkbox_2).toBeChecked();
+  });
+});
+
+test.describe("context menu", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/context_menu");
+  });
+
+  test("has title", async ({ page }) => {
+    await expect(page).toHaveTitle(/The Internet/);
+  });
+
+  test("has heading", async ({ page }) => {
+    await expect(page.getByRole("heading", { name: "Context Menu" })).toHaveText("Context Menu");
+  });
+
+  test("right click generates js alert", async ({ page }) => {
+    const hotspot = page.locator("#hot-spot");
+    await expect(hotspot).toBeVisible();
+
+    page.on("dialog", async (dialog) => {
+      expect(dialog.message()).toContain("You selected a context menu");
+      await dialog.accept();
+    });
+
+    await page.locator("#hot-spot").click({ button: "right" });
+  });
+});
